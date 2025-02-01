@@ -164,13 +164,11 @@ sudo systemctl status amazon-cloudwatch-agent
 
 AWS マネジメントコンソール → CloudWatch → メトリクス → CWAgent
 
-
-https://chatgpt.com/c/679b8463-4410-8004-b958-8ed37cb4ea04
+### 2025/02/02
 
 ### go mysql docker-compose
 
 https://zenn.dev/ajapa/articles/443c396a2c5dd1
-
 
 ### マルチステージビルド
 
@@ -189,3 +187,12 @@ docker-compose up -d
 docker-compose build --build-arg TARGET=prd
 docker-compose up -d
 ```
+
+- 詰まった内容
+
+docker fileで build して mainを実行して、composeでそのまま実行するとうまくいかない
+=> compose のcommandで 上書きして main.goを実行させる
+
+### mysqlをローカルで接続する
+
+- 環境変数を利用s
