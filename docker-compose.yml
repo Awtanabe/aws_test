@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  go:
+    container_name: api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    tty: true
+    command: ["go", "run", "main.go"]
+    ports:
+      - 8080:8080
+    env_file:
+      - ./mysql/.env
+    depends_on:
+      - db
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+  db:
+    container_name: db
+    image: mysql:8.0.27
+    tty: true
+    platform: linux/x86_64
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - type: volume
+        source: mysql_volume
+        target: /var/lib/mysql
+      # - type: bind
+      #   source: ./mysql/init
+      #   target: /docker-entrypoint-initdb.d
+
+volumes:
+  mysql_volume:
+    name: mysql_volume

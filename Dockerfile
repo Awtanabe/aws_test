@@ -1,13 +1,22 @@
-FROM golang:1.23
+# 💡 `build` ステージ（コンパイル用）
+FROM golang:1.23 AS build
 
 WORKDIR /app
 
-# パッケージマネージャー
+# 依存関係をキャッシュするため、go.modとgo.sumを先にコピー
 COPY go.mod go.sum ./
-## ビルド時のコマンドrun, コンテナの時は cmd
 RUN go mod download && go mod verify
+
+# ソースコードをコピー
 COPY . .
 
-RUN go build -v -o app/main main.go
+# 実行ファイルをビルド
+RUN go build -v -o main main.go
 
-CMD ["./app/main"]
+# 💡 `base` ステージ（ランタイム環境）
+FROM golang:1.23 AS base
+WORKDIR /app
+
+COPY --from=build /app/main /app/main
+
+CMD ["/app/main"]
