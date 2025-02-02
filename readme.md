@@ -195,4 +195,122 @@ docker fileで build して mainを実行して、composeでそのまま実行�
 
 ### mysqlをローカルで接続する
 
-- 環境変数を利用s
+- 環境変数を利用
+
+### mysql ポイント
+
+- amazon linux 2では mariadb？を使ってて微妙に違うので、mysqlを入れる方が良い
+  - clientからの接続時も認証方式が違うとかで接続できない
+- api sg からのネットワークだけを受け付けた
+- クライアントからのアクセス
+ - ユーザーごとにどこからのホストからアクセスするのか？の設定が必要
+   - ホストは解放して良いと思う。sgで制限するので
+
+
+
+### aws mysql
+
+- 環境
+
+amazon linux 2
+
+
+```
+sudo yum update -y
+
+sudo amazon-linux-extras enable mysql8.0
+
+sudo yum install -y mysql mysql-server
+
+// 起動
+sudo systemctl start mysqld
+sudo systemctl enable mysqld
+
+// 初期パスワード確認
+sudo cat /var/log/mysqld.log | grep 'temporary password'
+
+// 初期設定
+sudo mysql_secure_installation
+・一時パスワード(上記のパスワードかな)
+・新しいルートパスワード
+・設定進める
+
+// 起動
+mysql -u root -p
+```
+
+### mysql sg group
+
+- 0.0.0.0/0 からの 3306 の許可
+セキュリティグループを指定して良いかも
+
+```
+// これだとローカルでもアクセスできてしまいそう
+mysql -u testuser -p -h <EC2のパブリックIP>
+```
+
+### データベースとユーザー
+
+```
+CREATE DATABASE testdb;
+CREATE USER 'testuser'@'%' IDENTIFIED BY 'password123';
+GRANT ALL PRIVILEGES ON testdb.* TO 'testuser'@'%';
+FLUSH PRIVILEGES;
+```
+
+### バッションサーバー mysql クライアント
+
+
+```
+sudo yum install -y mariadb
+
+```
+
+### mysql エラー
+
+- sg group でポート開けたのにエラー
+原因はmysqlの ホストの制限が localhostのみをdefaultで設定してるみたい
+
+```
+[ec2-user@ip-10-0-0-166 ~]$ mysql -u root -h 10.0.1.118 -p
+Enter password:
+ERROR 1130 (HY000): Host '10.0.0.166' is not allowed to connect to this MySQL server
+```
+
+- ホストの確認 && 権限を付与
+
+```
+SELECT Host, User FROM mysql.user;
+
+
+// 新しく付与
+CREATE USER 'user'@'%' IDENTIFIED BY 'Str0ngP@ssw0rd!';
+GRANT ALL PRIVILEGES ON *.* TO 'user'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+```
+
+- 初期パスワードは変更
+
+```
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';
+FLUSH PRIVILEGES;
+
+// 再起動
+sudo systemctl restart mysqld
+
+```
+
+
+###　環境変数
+
+
+```
+echo 'export DB_HOST=""' >> ~/.bashrc
+echo 'export DB_USER="user"' >> ~/.bashrc
+echo 'export DB_PASSWORD="sw0rd!"' >> ~/.bashrc
+echo 'export DB_NAME="db"' >> ~/.bashrc
+echo 'export DB_PORT="3306"' >> ~/.bashrc
+
+# 設定を反映
+source ~/.bashrc
+```
