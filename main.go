@@ -61,5 +61,9 @@ func main() {
 		db.Find(&products)
 		return c.JSON(http.StatusOK, products)
 	})
+
+	e.GET("/test", func(c echo.Context) error {
+		return c.String(http.StatusOK, "hello world 1")
+	})
 	e.Logger.Fatal(e.Start(":8080"))
 }

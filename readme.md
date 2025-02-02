@@ -43,7 +43,7 @@ ec2を置く
 
 #### git
 
-sudo yum install git
+sudo yum install -y git
 
 
 
@@ -55,7 +55,7 @@ sudo tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz
 
 echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
 source ~/.bashrc
-go verion
+go version
 
 ### 構成
 
@@ -305,9 +305,9 @@ sudo systemctl restart mysqld
 
 
 ```
-echo 'export DB_HOST=""' >> ~/.bashrc
+echo 'export DB_HOST="10.0.1.118"' >> ~/.bashrc
 echo 'export DB_USER="user"' >> ~/.bashrc
-echo 'export DB_PASSWORD="sw0rd!"' >> ~/.bashrc
+echo 'export DB_PASSWORD="Str0ngP@ssw0rd!!"' >> ~/.bashrc
 echo 'export DB_NAME="db"' >> ~/.bashrc
 echo 'export DB_PORT="3306"' >> ~/.bashrc
 
