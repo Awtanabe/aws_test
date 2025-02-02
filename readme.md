@@ -335,3 +335,5 @@ api-server-sg インバウンドルールを alg-sgに
 
 - https
 - ドメイン設定
+- ecs
+- cloud watch
