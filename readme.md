@@ -210,6 +210,10 @@ docker fileで build して mainを実行して、composeでそのまま実行�
 
 ### aws mysql
 
+- nat gw
+
+elastic ip必要で、nat gwがインターネットにアクセスするために必要らしいs
+
 - 環境
 
 amazon linux 2
@@ -307,10 +311,27 @@ sudo systemctl restart mysqld
 ```
 echo 'export DB_HOST="10.0.1.118"' >> ~/.bashrc
 echo 'export DB_USER="user"' >> ~/.bashrc
-echo 'export DB_PASSWORD="Str0ngP@ssw0rd!!"' >> ~/.bashrc
+echo 'export DB_PASSWORD="Str0ngP@ssw0rd!"' >> ~/.bashrc
 echo 'export DB_NAME="db"' >> ~/.bashrc
 echo 'export DB_PORT="3306"' >> ~/.bashrc
 
 # 設定を反映
 source ~/.bashrc
 ```
+
+### ロードバランサー
+
+- http のポートを80にして詰まった
+アプリは8080で開けていたため
+
+- sg group
+alb用を作成 カスタムtcp 8080で作成
+http, httpsも対応できるようにしたい
+
+api-server-sg インバウンドルールを alg-sgに
+
+
+## 次
+
+- https
+- ドメイン設定
