@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -37,7 +37,7 @@ func connectDB() *gorm.DB {
 	for i := 0; i < maxRetry; i++ {
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 		if err == nil {
-			log.Println("Database connection successful")
+			log.Info().Msg("Accessed root path")
 			return db
 		}
 
@@ -45,13 +45,16 @@ func connectDB() *gorm.DB {
 		time.Sleep(1 * time.Second)
 	}
 
-	log.Fatal("Failed to connect to database after multiple attempts")
+	log.Fatal().Msg("Failed to connect to database after multiple attempts")
 	return nil
 }
 
 
 
 func main() {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	log.Logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+
 	e := echo.New()
 
 	// db := connectDB()
@@ -62,27 +65,27 @@ func main() {
 		// products := []Product{}
 		// db.Find(&products)
 		// return c.JSON(http.StatusOK, products)
+		log.Info().Msg("Accessed root path")
 		return c.String(http.StatusOK, "root path")
 	})
 
 	e.GET("/test", func(c echo.Context) error {
 		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-    log.Print("request /test")
+		log.Info().Msg("Accessed /test")
 
 		return c.String(http.StatusOK, "test")
 	})
 
 	e.GET("/test1", func(c echo.Context) error {
 		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-    log.Print("request /test1")
-
+		log.Info().Msg("Accessed /test1")
 		return c.String(http.StatusOK, "test1")
 	})
 
 	e.GET("/test2", func(c echo.Context) error {
 		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-    log.Print("request /test2")
 
+		log.Info().Msg("Accessed /test2")
 		return c.String(http.StatusOK, "test2")
 	})
 	e.Logger.Fatal(e.Start(":8080"))

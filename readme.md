@@ -348,3 +348,19 @@ https://www.site24x7.jp/blog/cloudwatch-ec2-monitoring/
 https://qiita.com/kaburagi_/items/58364e957b63b981a0bc
 
 https://qiita.com/m_t_u_r_/items/2cf73b6a32c11357bb37
+
+- aws ネットワーク構築
+ - vpc
+ - パブリックサブネット
+ - igw
+ - router パブリック
+
+#### ログ転送の仕組み
+
+Q. logファイルへの書き込みいらないのか？
+A. いらないらしい 
+
+理由は下記
+仕組みの確認：CloudWatch Logs に Go のログを送るときに log ファイルは必要か？
+結論として、標準出力 (stdout) に直接ログを出力すれば log ファイルは不要 です。CloudWatch Logs エージェント (awslogs) は 標準出力 から直接 CloudWatch Logs に送ることが可能だからです。
+
