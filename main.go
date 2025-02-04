@@ -71,9 +71,13 @@ func main() {
 		return c.String(http.StatusOK, "test")
 	})
 
-	e.GET("/test1", func(c echo.Context) error {
-		log.Info().Msg("Accessed /test1")
-		return c.String(http.StatusOK, "test1")
+	e.GET("/burden_test", func(c echo.Context) error {
+		log.Info().Msg("Accessed /burden_test")
+
+		for i:= 0; i < 1000; i++ {
+			log.Print("print", i)
+		}
+		return c.String(http.StatusOK, "burden_test")
 	})
 
 	e.GET("/test2", func(c echo.Context) error {

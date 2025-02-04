@@ -377,6 +377,9 @@ A. いらないらしい
 - cloud watch logsインストール && 設定
   - ecsなら stdoutで検知するがec2ならログファイル必要
   - cloud watch のロググループに出力される
+  - cpu メモリ
+    - cpu は　cpu_usage_idleで検索
+     - totalcpu trueにする必要性あるかも
 
 
 - ロール作成
@@ -392,11 +395,18 @@ A. いらないらしい
 				"logs:CreateLogStream",
 				"logs:PutLogEvents"
 			],
-			"Resource": "arn:aws:logs:ap-northeast-1:<aws-id>:log-group:/ecs/api-server:*"
+			"Resource": "arn:aws:logs:ap-northeast-1:682033467141:log-group:/ecs/api-server:*"
 		},
 		{
 			"Effect": "Allow",
 			"Action": "ec2:DescribeTags",
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"cloudwatch:PutMetricData"
+			],
 			"Resource": "*"
 		}
 	]
@@ -510,7 +520,7 @@ Current config as follows:
 					"cpu_usage_system"
 				],
 				"metrics_collection_interval": 60,
-				"totalcpu": false
+				"totalcpu": false // ⭐️ trueにする必要がるかも
 			},
 			"disk": {
 				"measurement": [
