@@ -13,13 +13,11 @@ import (
 	"gorm.io/gorm"
 )
 
-
 type Product struct {
 	gorm.Model
 	Name  string `json:"name"`
 	Price int    `json:"price"`
 }
-
 
 func connectDB() *gorm.DB {
 	host := os.Getenv("DB_HOST")
@@ -37,11 +35,11 @@ func connectDB() *gorm.DB {
 	for i := 0; i < maxRetry; i++ {
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 		if err == nil {
-			log.Info().Msg("Accessed root path")
+			log.Info().Msg("Successfully connected to database")
 			return db
 		}
 
-		log.Printf("Database connection failed: %v. Retrying... (%d/%d)\n", err, i+1, maxRetry)
+		log.Error().Err(err).Msgf("Database connection failed. Retrying... (%d/%d)", i+1, maxRetry)
 		time.Sleep(1 * time.Second)
 	}
 
@@ -49,44 +47,39 @@ func connectDB() *gorm.DB {
 	return nil
 }
 
-
-
 func main() {
+	// ログファイルを開く（なければ作成）
+	logFile, err := os.OpenFile("/var/log/go_app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to open log file")
+	}
+	defer logFile.Close()
+
+	// zerolog の出力先をファイルに設定
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+	log.Logger = zerolog.New(logFile).With().Timestamp().Logger()
 
 	e := echo.New()
 
-	// db := connectDB()
-
-	// db.AutoMigrate(&Product{})
-
 	e.GET("/", func(c echo.Context) error {
-		// products := []Product{}
-		// db.Find(&products)
-		// return c.JSON(http.StatusOK, products)
 		log.Info().Msg("Accessed root path")
 		return c.String(http.StatusOK, "root path")
 	})
 
 	e.GET("/test", func(c echo.Context) error {
-		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 		log.Info().Msg("Accessed /test")
-
 		return c.String(http.StatusOK, "test")
 	})
 
 	e.GET("/test1", func(c echo.Context) error {
-		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 		log.Info().Msg("Accessed /test1")
 		return c.String(http.StatusOK, "test1")
 	})
 
 	e.GET("/test2", func(c echo.Context) error {
-		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-
 		log.Info().Msg("Accessed /test2")
 		return c.String(http.StatusOK, "test2")
 	})
+
 	e.Logger.Fatal(e.Start(":8080"))
 }
