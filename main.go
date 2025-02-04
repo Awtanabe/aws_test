@@ -72,13 +72,19 @@ func main() {
 	})
 
 	e.GET("/burden_test", func(c echo.Context) error {
-		log.Info().Msg("Accessed /burden_test")
+    log.Info().Msg("Accessed /burden_test")
 
-		for i:= 0; i < 1000; i++ {
-			log.Print("print", i)
-		}
-		return c.String(http.StatusOK, "burden_test")
-	})
+    // 100MB のスライスを作成してメモリを確保
+    data := make([]byte, 100*1024*1024)
+
+    // ダミーデータを入れる
+    for i := range data {
+        data[i] = byte(i % 256)
+    }
+
+    return c.String(http.StatusOK, fmt.Sprintf("Allocated 100MB memory"))
+})
+
 
 	e.GET("/test2", func(c echo.Context) error {
 		log.Info().Msg("Accessed /test2")

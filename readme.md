@@ -380,6 +380,7 @@ A. いらないらしい
   - cpu メモリ
     - cpu は　cpu_usage_idleで検索
      - totalcpu trueにする必要性あるかも
+     - cpu 使用率は "cpu_usage_active"入れないと measurementに
 
 
 - ロール作成
