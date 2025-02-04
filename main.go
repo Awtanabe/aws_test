@@ -4,48 +4,14 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
-
-type Product struct {
-	gorm.Model
-	Name  string `json:"name"`
-	Price int    `json:"price"`
-}
-
-func connectDB() *gorm.DB {
-	host := os.Getenv("DB_HOST")
-	user := os.Getenv("DB_USER")
-	pass := os.Getenv("DB_PASSWORD")
-	name := os.Getenv("DB_NAME")
-	port := os.Getenv("DB_PORT")
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, pass, host, port, name)
-
-	maxRetry := 10
-	var db *gorm.DB
-	var err error
-
-	for i := 0; i < maxRetry; i++ {
-		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-		if err == nil {
-			log.Info().Msg("Successfully connected to database")
-			return db
-		}
-
-		log.Error().Err(err).Msgf("Database connection failed. Retrying... (%d/%d)", i+1, maxRetry)
-		time.Sleep(1 * time.Second)
-	}
-
-	log.Fatal().Msg("Failed to connect to database after multiple attempts")
-	return nil
-}
 
 func main() {
 	// ログファイルを開く（なければ作成）
@@ -72,19 +38,50 @@ func main() {
 	})
 
 	e.GET("/burden_test", func(c echo.Context) error {
-    log.Info().Msg("Accessed /burden_test")
+		log.Info().Msg("Accessed /burden_test")
 
-    // 100MB のスライスを作成してメモリを確保
-    data := make([]byte, 100*1024*1024)
+		// クエリパラメータ "workers" で並列数を指定（デフォルト: 10）
+		workersStr := c.QueryParam("workers")
+		workers, err := strconv.Atoi(workersStr)
+		if err != nil || workers <= 0 {
+			workers = 10 // デフォルトの並列数
+		}
 
-    // ダミーデータを入れる
-    for i := range data {
-        data[i] = byte(i % 256)
-    }
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+		resultMsg := ""
 
-    return c.String(http.StatusOK, fmt.Sprintf("Allocated 100MB memory"))
-})
+		start := time.Now()
 
+		for i := 0; i < workers; i++ {
+			wg.Add(1)
+			go func(id int) {
+				defer wg.Done()
+				log.Info().Msgf("Worker %d started", id)
+
+				// 100MB のスライスを作成してメモリを確保
+				data := make([]byte, 100*1024*1024)
+
+				// ダミーデータを入れる
+				for i := range data {
+					data[i] = byte(i % 256)
+				}
+
+				log.Info().Msgf("Worker %d finished", id)
+
+				// 結果を保存
+				mu.Lock()
+				resultMsg += fmt.Sprintf("Worker %d completed\n", id)
+				mu.Unlock()
+			}(i)
+		}
+
+		wg.Wait()
+		duration := time.Since(start)
+
+		// 全ワーカーの完了メッセージを返す
+		return c.String(http.StatusOK, fmt.Sprintf("Allocated %d x 100MB memory\nTime taken: %s\n%s", workers, duration, resultMsg))
+	})
 
 	e.GET("/test2", func(c echo.Context) error {
 		log.Info().Msg("Accessed /test2")
