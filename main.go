@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
+
 
 type Product struct {
 	gorm.Model
@@ -52,18 +54,36 @@ func connectDB() *gorm.DB {
 func main() {
 	e := echo.New()
 
-	db := connectDB()
+	// db := connectDB()
 
-	db.AutoMigrate(&Product{})
+	// db.AutoMigrate(&Product{})
 
 	e.GET("/", func(c echo.Context) error {
-		products := []Product{}
-		db.Find(&products)
-		return c.JSON(http.StatusOK, products)
+		// products := []Product{}
+		// db.Find(&products)
+		// return c.JSON(http.StatusOK, products)
+		return c.String(http.StatusOK, "root path")
 	})
 
 	e.GET("/test", func(c echo.Context) error {
-		return c.String(http.StatusOK, "hello world 1")
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+    log.Print("request /test")
+
+		return c.String(http.StatusOK, "test")
+	})
+
+	e.GET("/test1", func(c echo.Context) error {
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+    log.Print("request /test1")
+
+		return c.String(http.StatusOK, "test1")
+	})
+
+	e.GET("/test2", func(c echo.Context) error {
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+    log.Print("request /test2")
+
+		return c.String(http.StatusOK, "test2")
 	})
 	e.Logger.Fatal(e.Start(":8080"))
 }

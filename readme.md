@@ -337,3 +337,14 @@ api-server-sg インバウンドルールを alg-sgに
 - ドメイン設定
 - ecs
 - cloud watch
+
+
+### cloud watch 系
+
+https://qiita.com/hiroaki-u/items/09c7492f68c1fc6c1437
+
+https://www.site24x7.jp/blog/cloudwatch-ec2-monitoring/
+
+https://qiita.com/kaburagi_/items/58364e957b63b981a0bc
+
+https://qiita.com/m_t_u_r_/items/2cf73b6a32c11357bb37
