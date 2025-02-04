@@ -370,8 +370,61 @@ A. いらないらしい
 
 ### cloud watch 設定
 
+### ポイント
+- ロール作成
+- log出力ロジック && logファイル作成 && 権限
+  - todo ログファイルのローテーション設定
+- cloud watch logsインストール && 設定
+  - ecsなら stdoutで検知するがec2ならログファイル必要
+  - cloud watch のロググループに出力される
+
+
+- ロール作成
+
 ```
-[ec2-user@ip-172-31-7-118 ~]$  sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"logs:CreateLogGroup",
+				"logs:CreateLogStream",
+				"logs:PutLogEvents"
+			],
+			"Resource": "arn:aws:logs:ap-northeast-1:<aws-id>:log-group:/ecs/api-server:*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": "ec2:DescribeTags",
+			"Resource": "*"
+		}
+	]
+}
+```
+
+- ログファイル作成
+
+権限ないって言われるから
+
+```
+
+sudo touch /var/log/go_app.log
+sudo chown ec2-user:ec2-user /var/log/go_app.log
+sudo chmod 664 /var/log/go_app.log
+```
+
+- cloud watch logsインストール && 設定
+1. agent install
+
+```
+sudo yum install -y amazon-cloudwatch-agent
+```
+
+2. 設定
+
+```
+[ec2-user@ip-172-31-7-118 ~]$ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
 ================================================================
 = Welcome to the Amazon CloudWatch Agent Configuration Manager =
 =                                                              =
@@ -421,7 +474,7 @@ Do you want to add ec2 dimensions (ImageId, InstanceId, InstanceType, AutoScalin
 1. yes
 2. no
 default choice: [1]:
-1
+2
 Do you want to aggregate ec2 dimensions (InstanceId)?
 1. yes
 2. no
@@ -433,7 +486,7 @@ Would you like to collect your metrics at high resolution (sub-minute resolution
 3. 30s
 4. 60s
 default choice: [4]:
-3
+4
 Which default metrics config do you want?
 1. Basic
 2. Standard
@@ -444,16 +497,10 @@ default choice: [1]:
 Current config as follows:
 {
 	"agent": {
-		"metrics_collection_interval": 30,
+		"metrics_collection_interval": 60,
 		"run_as_user": "cwagent"
 	},
 	"metrics": {
-		"append_dimensions": {
-			"AutoScalingGroupName": "${aws:AutoScalingGroupName}",
-			"ImageId": "${aws:ImageId}",
-			"InstanceId": "${aws:InstanceId}",
-			"InstanceType": "${aws:InstanceType}"
-		},
 		"metrics_collected": {
 			"cpu": {
 				"measurement": [
@@ -462,7 +509,7 @@ Current config as follows:
 					"cpu_usage_user",
 					"cpu_usage_system"
 				],
-				"metrics_collection_interval": 30,
+				"metrics_collection_interval": 60,
 				"totalcpu": false
 			},
 			"disk": {
@@ -470,7 +517,7 @@ Current config as follows:
 					"used_percent",
 					"inodes_free"
 				],
-				"metrics_collection_interval": 30,
+				"metrics_collection_interval": 60,
 				"resources": [
 					"*"
 				]
@@ -479,7 +526,7 @@ Current config as follows:
 				"measurement": [
 					"io_time"
 				],
-				"metrics_collection_interval": 30,
+				"metrics_collection_interval": 60,
 				"resources": [
 					"*"
 				]
@@ -488,13 +535,13 @@ Current config as follows:
 				"measurement": [
 					"mem_used_percent"
 				],
-				"metrics_collection_interval": 30
+				"metrics_collection_interval": 60
 			},
 			"swap": {
 				"measurement": [
 					"swap_used_percent"
 				],
-				"metrics_collection_interval": 30
+				"metrics_collection_interval": 60
 			}
 		}
 	}
@@ -513,6 +560,50 @@ Do you want to monitor any log files?
 1. yes
 2. no
 default choice: [1]:
+1
+Log file path:
+/var/log/go_app.log
+Log group name:
+default choice: [go_app.log]
+api-log
+Log group class:
+1. STANDARD
+2. INFREQUENT_ACCESS
+default choice: [1]:
+1
+Log stream name:
+default choice: [{instance_id}]
+
+Log Group Retention in days
+1. -1
+2. 1
+3. 3
+4. 5
+5. 7
+6. 14
+7. 30
+8. 60
+9. 90
+10. 120
+11. 150
+12. 180
+13. 365
+14. 400
+15. 545
+16. 731
+17. 1096
+18. 1827
+19. 2192
+20. 2557
+21. 2922
+22. 3288
+23. 3653
+default choice: [1]:
+7
+Do you want to specify any additional log files to monitor?
+1. yes
+2. no
+default choice: [1]:
 2
 Do you want the CloudWatch agent to also retrieve X-ray traces?
 1. yes
@@ -524,16 +615,25 @@ Saved config file to /opt/aws/amazon-cloudwatch-agent/bin/config.json successful
 Current config as follows:
 {
 	"agent": {
-		"metrics_collection_interval": 30,
+		"metrics_collection_interval": 60,
 		"run_as_user": "cwagent"
 	},
+	"logs": {
+		"logs_collected": {
+			"files": {
+				"collect_list": [
+					{
+						"file_path": "/var/log/go_app.log",
+						"log_group_class": "STANDARD",
+						"log_group_name": "api-log",
+						"log_stream_name": "{instance_id}",
+						"retention_in_days": 30
+					}
+				]
+			}
+		}
+	},
 	"metrics": {
-		"append_dimensions": {
-			"AutoScalingGroupName": "${aws:AutoScalingGroupName}",
-			"ImageId": "${aws:ImageId}",
-			"InstanceId": "${aws:InstanceId}",
-			"InstanceType": "${aws:InstanceType}"
-		},
 		"metrics_collected": {
 			"cpu": {
 				"measurement": [
@@ -542,7 +642,7 @@ Current config as follows:
 					"cpu_usage_user",
 					"cpu_usage_system"
 				],
-				"metrics_collection_interval": 30,
+				"metrics_collection_interval": 60,
 				"totalcpu": false
 			},
 			"disk": {
@@ -550,7 +650,7 @@ Current config as follows:
 					"used_percent",
 					"inodes_free"
 				],
-				"metrics_collection_interval": 30,
+				"metrics_collection_interval": 60,
 				"resources": [
 					"*"
 				]
@@ -559,7 +659,7 @@ Current config as follows:
 				"measurement": [
 					"io_time"
 				],
-				"metrics_collection_interval": 30,
+				"metrics_collection_interval": 60,
 				"resources": [
 					"*"
 				]
@@ -568,13 +668,13 @@ Current config as follows:
 				"measurement": [
 					"mem_used_percent"
 				],
-				"metrics_collection_interval": 30
+				"metrics_collection_interval": 60
 			},
 			"swap": {
 				"measurement": [
 					"swap_used_percent"
 				],
-				"metrics_collection_interval": 30
+				"metrics_collection_interval": 60
 			}
 		}
 	}
@@ -590,8 +690,7 @@ default choice: [1]:
 Program exits now.
 ```
 
-
-- 上記の設定を cloud watch agentに反映
+3. 反映
 
 ```
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
@@ -599,7 +698,6 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
   -m ec2 \
   -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json \
   -s
-
 ```
 
 - 起動
@@ -618,4 +716,14 @@ sudo systemctl status amazon-cloudwatch-agent
 
 ```
 nohup go run main.go > output.log 2>&1 &
+
+
+// これだけでバックグラウンド
+go run main.go &
 ```
+
+### デバック
+
+- 
+- cloud watch log agentでエラーを吐いていないか？
+ sudo tail -f /opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log
